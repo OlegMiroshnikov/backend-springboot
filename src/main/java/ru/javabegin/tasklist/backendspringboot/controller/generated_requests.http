@@ -5,4 +5,10 @@ Accept: application/json
 ### GET request to category
 GET http://localhost:8080/category/test
 
+### POST request to priority
+POST http://localhost:8080/priority/add
+Content-Type: application/json
+
+{"title": "highest", "color": "f07f7f"}
+
 ###
