@@ -11,78 +11,63 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/category") // базовый адрес
+@RequestMapping("/category")
 public class CategoryController {
 
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
     public CategoryController(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
     }
 
-    @GetMapping("/test")
-    public List<Category> test(){
-        return categoryRepository.findAll();
+    @GetMapping("/all")
+    public List<Category> findAll() {
+        return categoryRepository.findAllByOrderByTitleAsc();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Category> add(@RequestBody Category category){
-
-        // проверка на обязательные параметры
+    public ResponseEntity<Category> add(@RequestBody Category category) {
         if (category.getId() != null && category.getId() != 0) {
-            // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
             return new ResponseEntity("redundant param: id MUST be null", HttpStatus.NOT_ACCEPTABLE);
         }
-
-        // если передали пустое значение title
         if (category.getTitle() == null || category.getTitle().trim().length() == 0) {
             return new ResponseEntity("missed param: title", HttpStatus.NOT_ACCEPTABLE);
         }
-
         return ResponseEntity.ok(categoryRepository.save(category));
     }
 
     @PutMapping("/update")
-    public ResponseEntity update(@RequestBody Category category){
-
-        // проверка на обязательные параметры
+    public ResponseEntity update(@RequestBody Category category) {
         if (category.getId() == null || category.getId() == 0) {
             return new ResponseEntity("missed param: id", HttpStatus.NOT_ACCEPTABLE);
         }
-
-        // если передали пустое значение title
         if (category.getTitle() == null || category.getTitle().trim().length() == 0) {
             return new ResponseEntity("missed param: title", HttpStatus.NOT_ACCEPTABLE);
         }
-
-        // save работает как на добавление, так и на обновление
         return ResponseEntity.ok(categoryRepository.save(category));
     }
 
     @GetMapping("/id/{id}")
     public ResponseEntity<Category> findById(@PathVariable Long id) {
         Category category = null;
-        try{
+        try {
             category = categoryRepository.findById(id).get();
-        }catch (NoSuchElementException e){ // если объект не будет найден
+        } catch (NoSuchElementException e) {
             e.printStackTrace();
-            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity("id=" + id + " not found", HttpStatus.NOT_ACCEPTABLE);
         }
-        return  ResponseEntity.ok(category);
+        return ResponseEntity.ok(category);
     }
 
-    // параметр id передаются не в BODY запроса, а в самом URL
     @DeleteMapping("/delete/{id}")
     public ResponseEntity delete(@PathVariable Long id) {
-        // можно обойтись и без try-catch, тогда будет возвращаться полная ошибка (stacktrace)
-        // здесь показан пример, как можно обрабатывать исключение и отправлять свой текст/статус
         try {
             categoryRepository.deleteById(id);
-        }catch (EmptyResultDataAccessException e){
+        } catch (EmptyResultDataAccessException e) {
             e.printStackTrace();
-            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity("id=" + id + " not found", HttpStatus.NOT_ACCEPTABLE);
         }
-        return new ResponseEntity(HttpStatus.OK); // не возвращаем удаленный объект
+        return new ResponseEntity(HttpStatus.OK);
     }
 
 }
