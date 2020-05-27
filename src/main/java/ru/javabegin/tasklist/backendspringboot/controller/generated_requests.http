@@ -1,0 +1,8 @@
+### GET request to priority
+GET http://localhost:8080/priority/test
+Accept: application/json
+
+### GET request to category
+GET http://localhost:8080/category/test
+
+###
