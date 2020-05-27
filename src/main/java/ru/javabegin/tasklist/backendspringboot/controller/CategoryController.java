@@ -1,5 +1,6 @@
 package ru.javabegin.tasklist.backendspringboot.controller;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +8,7 @@ import ru.javabegin.tasklist.backendspringboot.entity.Category;
 import ru.javabegin.tasklist.backendspringboot.repo.CategoryRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/category") // базовый адрес
@@ -55,6 +57,32 @@ public class CategoryController {
 
         // save работает как на добавление, так и на обновление
         return ResponseEntity.ok(categoryRepository.save(category));
+    }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Category> findById(@PathVariable Long id) {
+        Category category = null;
+        try{
+            category = categoryRepository.findById(id).get();
+        }catch (NoSuchElementException e){ // если объект не будет найден
+            e.printStackTrace();
+            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return  ResponseEntity.ok(category);
+    }
+
+    // параметр id передаются не в BODY запроса, а в самом URL
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity delete(@PathVariable Long id) {
+        // можно обойтись и без try-catch, тогда будет возвращаться полная ошибка (stacktrace)
+        // здесь показан пример, как можно обрабатывать исключение и отправлять свой текст/статус
+        try {
+            categoryRepository.deleteById(id);
+        }catch (EmptyResultDataAccessException e){
+            e.printStackTrace();
+            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return new ResponseEntity(HttpStatus.OK); // не возвращаем удаленный объект
     }
 
 }

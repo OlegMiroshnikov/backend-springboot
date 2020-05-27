@@ -1,5 +1,6 @@
 package ru.javabegin.tasklist.backendspringboot.controller;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +8,7 @@ import ru.javabegin.tasklist.backendspringboot.entity.Priority;
 import ru.javabegin.tasklist.backendspringboot.repo.PriorityRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 // используем @RestController вместо обычного @Controller, чтобы все ответы сразу оборачивались в JSON
 // иначе пришлось бы выполнять лишнюю работу, использовать @ResponseBody для ответа, указывать тип отправки JSON
@@ -67,7 +69,32 @@ public class PriorityController {
 
         // save работает как на добавление, так и на обновление
         return ResponseEntity.ok(priorityRepository.save(priority));
+    }
 
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Priority> findById(@PathVariable Long id) {
+        Priority priority = null;
+        try{
+            priority = priorityRepository.findById(id).get();
+        }catch (NoSuchElementException e){ // если объект не будет найден
+            e.printStackTrace();
+            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return  ResponseEntity.ok(priority);
+    }
+
+    // параметр id передаются не в BODY запроса, а в самом URL
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity delete(@PathVariable Long id) {
+        // можно обойтись и без try-catch, тогда будет возвращаться полная ошибка (stacktrace)
+        // здесь показан пример, как можно обрабатывать исключение и отправлять свой текст/статус
+        try {
+            priorityRepository.deleteById(id);
+        }catch (EmptyResultDataAccessException e){
+            e.printStackTrace();
+            return new ResponseEntity("id="+id+" not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return new ResponseEntity(HttpStatus.OK); // не возвращаем удаленный объект
     }
 
 }
