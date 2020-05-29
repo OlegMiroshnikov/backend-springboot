@@ -2,6 +2,9 @@ package ru.javabegin.tasklist.backendspringboot.controller;
 
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,13 +83,31 @@ public class TaskController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<List<Task>> search(@RequestBody TaskSearchValues taskSearchValues) {
+    public ResponseEntity<Page<Task>> search(@RequestBody TaskSearchValues taskSearchValues) {
         MyLogger.showMethodName("task: search() ---------------------------------------------------------------- ");
         String title = taskSearchValues.getTitle() != null ? taskSearchValues.getTitle() : null;
         Integer completed = taskSearchValues.getCompleted() != null ?  taskSearchValues.getCompleted() : null;
         Long priorityId = taskSearchValues.getPriorityId() != null ? taskSearchValues.getPriorityId() : null;
         Long categoryId = taskSearchValues.getCategoryId() != null ? taskSearchValues.getCategoryId() : null;
-        return ResponseEntity.ok(taskRepository.findByParams(title, completed, priorityId, categoryId));
+
+        String sortColumn = taskSearchValues.getSortColumn() != null ? taskSearchValues.getSortColumn() : null;
+        String sortDirection = taskSearchValues.getSortDirection() != null ? taskSearchValues.getSortDirection() : null;
+        Integer pageNumber = taskSearchValues.getPageNumber() != null ? taskSearchValues.getPageNumber() : null;
+        Integer pageSize = taskSearchValues.getPageSize() != null ? taskSearchValues.getPageSize() : null;
+        Sort.Direction direction = sortDirection == null || sortDirection.trim().length() == 0 || sortDirection.trim().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        // объект сортировки
+        Sort sort = Sort.by(direction, sortColumn);
+
+        // объект постраничности
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
+
+        // результат запроса с постраничным выводом
+        Page result = taskRepository.findByParams(title, completed, priorityId, categoryId, pageRequest);
+
+        // результат запроса
+        return ResponseEntity.ok(result);
+
     }
 
 }

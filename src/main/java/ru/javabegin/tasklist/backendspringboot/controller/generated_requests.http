@@ -15,4 +15,10 @@ Content-Type: application/json
 GET http://localhost:8080/stat
 Accept: application/json
 
+### POST request to task with search
+POST http://localhost:8080/task/search
+Content-Type: application/json
+
+{"title": "hi", "pageNumber": 0, "pageSize":  3, "sortColumn": "title", "sortDirection":  "desc"}
+
 ###
